@@ -1,0 +1,14 @@
+<div class="page-header">
+  <h1>Sudoku</h1>
+</div>
+<table class="table table-bordered">
+  <% count = 0 %>
+  <% @puzzle.grid.each do |number| %>
+    <%= "<tr>".html_safe if count % 9 == 0 %>
+      <td class="<%= "row-#{count / 9} col-#{count % 9}" %>"><%= number %></td>
+    <%= "</tr>".html_safe if count % 9 == 8 %>
+    <% count += 1 %>
+  <% end %>
+</table>
+
+<%= link_to "Solve Another", new_puzzle_path, class: 'btn' %>

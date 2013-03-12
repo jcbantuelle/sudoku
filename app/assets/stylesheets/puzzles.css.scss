@@ -1,0 +1,19 @@
+// Place all the styles related to the puzzles controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.table-bordered {
+  border: 5px solid black;
+}
+
+.table-bordered tbody tr td.col-2, .table-bordered tbody tr td.col-5 {
+  border-right: 5px solid black;
+}
+
+.table-bordered tbody tr td.row-2, .table-bordered tbody tr td.row-5 {
+  border-bottom: 5px solid black;
+}
+
+.table-bordered tbody tr td {
+  text-align: center;
+}
