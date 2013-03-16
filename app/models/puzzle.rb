@@ -1,34 +1,52 @@
 class Puzzle
 
-  attr_accessor :grid
+  attr_accessor :grid, :error
 
   def initialize(grid)
     @grid = grid
-    @invalid = false
+    @valid = true
     @stuck = false
+    @error = nil
+  end
+
+  def self.generate
+
   end
 
   def solve
-    until solved? || stuck?
-      @stuck = true
-      @grid.each_with_index do |value, index|
-        solve_square(index) if value == 0
-        return if invalid?
-      end
-    end
-
-    guess if stuck?
-  end
-
-  def invalid?
-    @invalid
-  end
-
-  def solved?
-    !@grid.include?(0)
+    return unless valid_grid?
+    solve_squares
+    guess if stuck? && valid?
+    valid? ? @grid : nil
   end
 
   private
+
+  def valid_grid?
+    valid_grid_size? && valid_grid_values?
+  end
+
+  def valid_grid_size?
+    if grid.length != 81
+      @valid = false
+      @error = "Grid is not 9x9"
+    end
+    valid?
+  end
+
+  def valid_grid_values?
+    @grid.each_with_index do |value, index|
+      unless value == 0
+        used_values = values_for_square index
+        if used_values.include? value
+          @valid = false
+          @error = "Grid has conflicting values"
+          return false
+        end
+      end
+    end
+    true
+  end
 
   def guess
     guess_index = @grid.index(0)
@@ -37,10 +55,20 @@ class Puzzle
       new_grid = @grid.dup
       new_grid[guess_index] = guess_value
       sudoku = Puzzle.new(new_grid)
-      sudoku.solve
-      if sudoku.solved?
+      if sudoku.solve
         @grid = sudoku.grid
-        break
+        return
+      end
+    end
+    @valid = false
+  end
+
+  def solve_squares
+    until solved? || stuck?
+      @stuck = true
+      @grid.each_with_index do |value, index|
+        solve_square(index) if value == 0
+        return unless valid?
       end
     end
   end
@@ -48,7 +76,7 @@ class Puzzle
   def solve_square(index)
     options = valid_options(index)
 
-    @invalid = options.length == 0
+    @valid = options.length != 0
     if options.length == 1
       @stuck = false
       @grid[index] = options[0]
@@ -56,18 +84,17 @@ class Puzzle
   end
 
   def valid_options(index)
-    possible_options = [1,2,3,4,5,6,7,8,9]
-    invalid_options = column_values(index)
-    invalid_options += row_values(index)
-    invalid_options += grid_values(index)
-    invalid_options.uniq!
-    possible_options.reject {|i| invalid_options.include?(i) }
+    [1,2,3,4,5,6,7,8,9] - values_for_square(index)
+  end
+
+  def values_for_square(index)
+    column_values(index) + row_values(index) + grid_values(index)
   end
 
   def column_values(index)
     values = []
     (index % 9).step(80, 9) do |column_index|
-      values << @grid[column_index] unless @grid[column_index] == 0
+      values << @grid[column_index] unless column_index == index || @grid[column_index] == 0
     end
     values
   end
@@ -76,7 +103,7 @@ class Puzzle
     values = []
     row_index = index - (index % 9)
     9.times {
-      values << @grid[row_index] unless @grid[row_index] == 0
+      values << @grid[row_index] unless row_index == index || @grid[row_index] == 0
       row_index += 1
     }
     values
@@ -90,7 +117,7 @@ class Puzzle
     0.step(18, 9) do |row|
       0.step(2) do |column|
         grid_index = grid_start + row + column
-        values << @grid[grid_index] unless @grid[grid_index] == 0
+        values << @grid[grid_index] unless grid_index == index || @grid[grid_index] == 0
       end
     end
     values
@@ -100,4 +127,11 @@ class Puzzle
     @stuck
   end
 
+  def valid?
+    @valid
+  end
+
+  def solved?
+    !@grid.include?(0)
+  end
 end
